@@ -79,3 +79,7 @@ fabric.properties
 *.iml
 out
 gen
+
+# chyba moje własne
+/dataSources/
+/dataSources.local.xml
