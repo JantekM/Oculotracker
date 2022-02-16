@@ -13,7 +13,7 @@ def test_video_capture() -> None:
     capture = cv.VideoCapture(CAMERA_ID) #TODO try catch here
     capture.set(cv.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     capture.set(cv.CAP_PROP_FRAME_WIDTH, WIDTH)
-
+    capture.set(cv.CAP_PROP_FPS, FPS)
     while True:
         is_true, frame = capture.read()
         cv.imshow("Video Capture Test", frame)
