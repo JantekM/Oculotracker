@@ -82,4 +82,6 @@ gen
 
 # chyba moje własne
 /dataSources/
-/dataSources.local.xml
+/dataSources.local.xml!/Training Data/
+
+/Training Data/

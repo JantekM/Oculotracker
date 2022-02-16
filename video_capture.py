@@ -18,8 +18,12 @@ def test_video_capture() -> None:
         is_true, frame = capture.read()
         cv.imshow("Video Capture Test", frame)
 
-        if cv.waitKey(20) & 0xFF == ord('c'):
+        key_pressed = cv.waitKey(20) & 0xFF
+        if key_pressed == ord('c'):
             break
+        elif key_pressed == ord('s'):
+            cv.imwrite("Training Data/test.jpg", frame)
+
 
     print(capture.get(cv.CAP_PROP_FRAME_WIDTH))
     print(capture.get(cv.CAP_PROP_FRAME_HEIGHT))
