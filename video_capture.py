@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import tkinter
 
 # default settings
 
@@ -10,7 +11,7 @@ FPS = 30
 
 
 def test_video_capture() -> None:
-    capture = cv.VideoCapture(CAMERA_ID) #TODO try catch here
+    capture = cv.VideoCapture(CAMERA_ID)  # TODO try catch here
     capture.set(cv.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     capture.set(cv.CAP_PROP_FRAME_WIDTH, WIDTH)
     capture.set(cv.CAP_PROP_FPS, FPS)
@@ -18,7 +19,7 @@ def test_video_capture() -> None:
         is_true, frame = capture.read()
         cv.imshow("Video Capture Test", frame)
 
-        key_pressed = cv.waitKey(20) & 0xFF
+        key_pressed = cv.waitKey(20)
         if key_pressed == ord('c'):
             break
         elif key_pressed == ord('s'):
@@ -33,4 +34,6 @@ def test_video_capture() -> None:
     cv.destroyAllWindows()
 
 
-test_video_capture()
+if __name__ == "__main__":
+    test_video_capture()
+
