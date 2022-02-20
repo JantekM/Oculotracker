@@ -1,4 +1,9 @@
-from tkinter import Tk, ttk, Canvas, Text, Message
+import random
+import tkinter
+import tkinter.ttk
+
+import video_capture
+import cv2 as cv
 
 root = None
 #interactive = True  # if the windows accepts key strokes as commands (True) or as plain text (False)
@@ -16,32 +21,32 @@ class AcquisitionGui:
         master.title("Oculotracker Training Data Acquisition Tool")
 
         # build ui
-        self.Window = ttk.Panedwindow(master, orient='vertical')
-        self.MainPaneFrame = ttk.Frame(self.Window)
+        self.Window = tkinter.ttk.Panedwindow(master, orient='vertical')
+        self.MainPaneFrame = tkinter.ttk.Frame(self.Window)
 
-        self.OptionsFrame = ttk.Frame(self.MainPaneFrame)
+        self.OptionsFrame = tkinter.ttk.Frame(self.MainPaneFrame)
 
-        self.CameraSettingsFrame = ttk.Labelframe(self.OptionsFrame)
+        self.CameraSettingsFrame = tkinter.ttk.Labelframe(self.OptionsFrame)
 
-        self.CameraIDLabel = ttk.Label(self.CameraSettingsFrame)
+        self.CameraIDLabel = tkinter.ttk.Label(self.CameraSettingsFrame)
         self.CameraIDLabel.configure(text='Camera')
         self.CameraIDLabel.grid(column='0', row='0')
-        self.CameraSelection = ttk.Combobox(self.CameraSettingsFrame)
+        self.CameraSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame)
         self.CameraSelection.grid(column='1', row='0')
 
-        self.ResolutionLabel = ttk.Label(self.CameraSettingsFrame)
+        self.ResolutionLabel = tkinter.ttk.Label(self.CameraSettingsFrame)
         self.ResolutionLabel.configure(text='Resolution')
         self.ResolutionLabel.grid(column='0', row='1')
-        self.ResolutionSelection = ttk.Combobox(self.CameraSettingsFrame)
+        self.ResolutionSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame)
         self.ResolutionSelection.grid(column='1', row='1')
 
-        self.FPSLabel = ttk.Label(self.CameraSettingsFrame)
+        self.FPSLabel = tkinter.ttk.Label(self.CameraSettingsFrame)
         self.FPSLabel.configure(text='FPS')
         self.FPSLabel.grid(column='0', row='2')
-        self.FPSSelection = ttk.Combobox(self.CameraSettingsFrame)
+        self.FPSSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame)
         self.FPSSelection.grid(column='1', row='2')
 
-        self.ShowPreviewCheckbox = ttk.Checkbutton(self.CameraSettingsFrame)
+        self.ShowPreviewCheckbox = tkinter.ttk.Checkbutton(self.CameraSettingsFrame)
         self.ShowPreviewCheckbox.configure(text='Show preview')
         self.ShowPreviewCheckbox.grid(column='0', columnspan='2', row='3')
         self.ShowPreviewCheckbox.configure(command=self.ChangePathCallback)
@@ -50,26 +55,26 @@ class AcquisitionGui:
         self.CameraSettingsFrame.configure(height='200', text='Camera Settings', width='150')
         self.CameraSettingsFrame.pack(fill='both', ipadx='5', ipady='5', side='top')
 
-        self.SeriesSettingsFrame = ttk.Labelframe(self.OptionsFrame)
+        self.SeriesSettingsFrame = tkinter.ttk.Labelframe(self.OptionsFrame)
 
-        self.DataPathText = Message(self.SeriesSettingsFrame)
+        self.DataPathText = tkinter.Message(self.SeriesSettingsFrame)
         self.DataPathText.configure(justify='left', takefocus=False,
                                     text='C:/Lorem/Ipsum/C:/Lorem/Ipsum/C:/Lorem/Ipsum/C:/Lorem/Ipsum/C:/Lorem/Ipsum/',
                                     width='200')
         self.DataPathText.grid(column='1', row='0')
-        self.DataPathLabel = ttk.Label(self.SeriesSettingsFrame)
+        self.DataPathLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
         self.DataPathLabel.configure(text='Data path:')
         self.DataPathLabel.grid(column='0', row='0')
 
-        self.ChangePathButton = ttk.Button(self.SeriesSettingsFrame)
+        self.ChangePathButton = tkinter.ttk.Button(self.SeriesSettingsFrame)
         self.ChangePathButton.configure(text='Change path')
         self.ChangePathButton.grid(column='0', columnspan='2', padx='10', pady='10', row='1')
 
-        self.PersonLabel = ttk.Label(self.SeriesSettingsFrame)
+        self.PersonLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
         self.PersonLabel.configure(text='Person:')
         self.PersonLabel.grid(column='0', padx='5', row='2')
 
-        self.PersonEntry = ttk.Entry(self.SeriesSettingsFrame)
+        self.PersonEntry = tkinter.ttk.Entry(self.SeriesSettingsFrame)
         self.PersonEntry.configure(state='disabled', width='30')
         self.PersonEntry['state'] = 'normal'
         self.PersonEntry.delete('0', 'end')
@@ -77,32 +82,32 @@ class AcquisitionGui:
         self.PersonEntry['state'] = 'disabled'
         self.PersonEntry.grid(column='1', row='2')
 
-        self.PlaceLabel = ttk.Label(self.SeriesSettingsFrame)
+        self.PlaceLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
         self.PlaceLabel.configure(text='Place:')
         self.PlaceLabel.grid(column='0', padx='5', row='3')
-        self.PlaceEntry = ttk.Entry(self.SeriesSettingsFrame)
+        self.PlaceEntry = tkinter.ttk.Entry(self.SeriesSettingsFrame)
         self.PlaceEntry.configure(width='30')
         self.PlaceEntry.grid(column='1', row='3')
 
-        self.LightLabel = ttk.Label(self.SeriesSettingsFrame)
+        self.LightLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
         self.LightLabel.configure(text='Light conditions:')
         self.LightLabel.grid(column='0', padx='5', row='4')
-        self.LightEntry = ttk.Entry(self.SeriesSettingsFrame)
+        self.LightEntry = tkinter.ttk.Entry(self.SeriesSettingsFrame)
         self.LightEntry.configure(width='30')
         self.LightEntry.grid(column='1', row='4')
 
-        self.AdditionalInfoLabel = ttk.Label(self.SeriesSettingsFrame)
+        self.AdditionalInfoLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
         self.AdditionalInfoLabel.configure(text='Additional info:')
         self.AdditionalInfoLabel.grid(column='0', padx='5', row='5')
-        self.AdditionalInfoEntry = ttk.Entry(self.SeriesSettingsFrame)
+        self.AdditionalInfoEntry = tkinter.ttk.Entry(self.SeriesSettingsFrame)
         self.AdditionalInfoEntry.configure(width='30')
         self.AdditionalInfoEntry.grid(column='1', row='5')
 
         self.SeriesSettingsFrame.configure(height='200', text='Series Settings', width='200')
         self.SeriesSettingsFrame.pack(expand='true', fill='both', ipadx='5', ipady='5', side='top')
 
-        self.KeyBindingsFrame = ttk.Labelframe(self.OptionsFrame)
-        self.KeyBindingsLabel = ttk.Label(self.KeyBindingsFrame)
+        self.KeyBindingsFrame = tkinter.ttk.Labelframe(self.OptionsFrame)
+        self.KeyBindingsLabel = tkinter.ttk.Label(self.KeyBindingsFrame)
         self.KeyBindingsLabel.configure(text='''Show keybindings: H
         Exit
         Fullscreen
@@ -126,22 +131,22 @@ class AcquisitionGui:
         self.OptionsFrame.configure(height='200', width='200')
         self.OptionsFrame.pack(expand='false', fill='both', ipadx='5', ipady='5', padx='5', pady='5', side='left')
 
-        self.RightFrame = ttk.Frame(self.MainPaneFrame)
-        self.CameraPreviewFrame = ttk.Frame(self.RightFrame)
+        self.RightFrame = tkinter.ttk.Frame(self.MainPaneFrame)
+        self.CameraPreviewFrame = tkinter.ttk.Frame(self.RightFrame)
 
-        self.CameraPreviewCanvas = Canvas(self.CameraPreviewFrame)
+        self.CameraPreviewCanvas = tkinter.Canvas(self.CameraPreviewFrame)
         self.CameraPreviewCanvas.pack(expand='true', fill='both', padx='5', pady='5', side='top')
         self.CameraPreviewFrame.configure(height='200', width='200')
         self.CameraPreviewFrame.pack(expand='true', fill='both', side='top')
 
-        self.LaunchFrame = ttk.Labelframe(self.RightFrame)
+        self.LaunchFrame = tkinter.ttk.Labelframe(self.RightFrame)
 
-        self.ConstPoseButton = ttk.Button(self.LaunchFrame)
+        self.ConstPoseButton = tkinter.ttk.Button(self.LaunchFrame)
         self.ConstPoseButton.configure(text='Constant Pose Mode')
         self.ConstPoseButton.pack(expand='true', side='left')
         self.ConstPoseButton.configure(command=self.ConstPoseCallback)
 
-        self.ConstantCursorButton = ttk.Button(self.LaunchFrame)
+        self.ConstantCursorButton = tkinter.ttk.Button(self.LaunchFrame)
         self.ConstantCursorButton.configure(text='Constant Cursor Mode')
         self.ConstantCursorButton.pack(expand='true', side='right')
         self.ConstantCursorButton.configure(command=self.CursorModeCallback)
@@ -156,8 +161,8 @@ class AcquisitionGui:
         self.MainPaneFrame.pack(expand='true', fill='both', side='top')
 
         self.Window.add(self.MainPaneFrame, weight='1')
-        self.StatusBarFrame = ttk.Frame(self.Window)
-        self.StatusBarOutputText = Text(self.StatusBarFrame)
+        self.StatusBarFrame = tkinter.ttk.Frame(self.Window)
+        self.StatusBarOutputText = tkinter.Text(self.StatusBarFrame)
         self.StatusBarOutputText.configure(autoseparators='false', height='3', insertunfocussed='none', setgrid='false')
         self.StatusBarOutputText.configure(state='disabled', tabstyle='tabular', undo='false', width='50')
         _text_ = '''1Status messages ...
@@ -202,10 +207,28 @@ class AcquisitionGui:
 def key_handler(event):
     # Replace the window's title with event.type: input key
     root.title("{}: {}".format(str(event.type), event.keysym))
+    if event.keysym == 'Escape':
+        video_capture.stop_capture()
+        cv.destroyAllWindows()
+        root.destroy()
+
+def render_preview():
+    global root
+    wait_period: int = 333
+    root.img = video_capture.get_frame_tk()
+
+    color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+             for i in range(1)]
+
+    #AcquisitionGui.gui.CameraPreviewCanvas.configure(background=color)
+    AcquisitionGui.gui.CameraPreviewCanvas.create_image(0, 0, anchor=tkinter.NW, image=root.img)
+    # TODO put render stuff here
+    print("rendering now")
+    root.after(wait_period, render_preview)
 
 def main() -> None:
     global root
-    root = Tk()
+    root = tkinter.Tk()
     AcquisitionGui(root)
 
     #root.title("Oculotracker Training Data Acquisition Tool")
@@ -214,13 +237,14 @@ def main() -> None:
     #root.attributes('-alpha', 0.8)
     #root.overrideredirect(1)
     root.bind('<KeyPress>', key_handler)
-
+    video_capture.start_capture()
+    root.after(500, render_preview)
 
 
 
 
     root.mainloop()
-
+    video_capture.stop_capture()
 
 
 if __name__ == "__main__":

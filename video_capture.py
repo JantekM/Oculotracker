@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv
-import tkinter
+from PIL import Image, ImageTk
 
 # default settings
 
@@ -9,14 +9,58 @@ HEIGHT = 1080
 WIDTH = 1920
 FPS = 30
 
+capture = None
+#frame = None
 
-def test_video_capture() -> None:
-    capture = cv.VideoCapture(CAMERA_ID)  # TODO try catch here
-    capture.set(cv.CAP_PROP_FRAME_HEIGHT, HEIGHT)
-    capture.set(cv.CAP_PROP_FRAME_WIDTH, WIDTH)
-    capture.set(cv.CAP_PROP_FPS, FPS)
+
+def start_capture(cam = CAMERA_ID, height = HEIGHT, width = WIDTH, fps = FPS):
+    print("starting video capture")
+    global capture
+    capture = cv.VideoCapture(cam)
+
+    #capture.release()
+    capture.set(cv.CAP_PROP_FRAME_HEIGHT, height)
+    capture.set(cv.CAP_PROP_FRAME_WIDTH, width)
+    capture.set(cv.CAP_PROP_FPS, fps)
+
+    working, _ = capture.read()
+    if not working:
+        # TODO log camera error
+        print("can't open camera")
+        capture = None
+        return False
+
+    return True
+
+
+def stop_capture():
+    global capture
+    capture.release()
+
+def get_frame_cv():
+    global capture
+    working, frame = capture.read()
+    if not working:
+        raise BaseException('error reading from camera input')
+    return frame
+
+def get_frame_tk():
+    frame = get_frame_cv()
+    #cv.imshow('first', frame)
+    blue, green, red = cv.split(frame)
+    img = cv.merge((red, green, blue))
+    #cv.imshow('second', img)
+    im = Image.fromarray(img)
+    return ImageTk.PhotoImage(image=im)
+
+
+def tst_video_capture() -> None:
+    start_capture()
+
+    frame = get_frame_cv()
+
     while True:
-        is_true, frame = capture.read()
+        frame = get_frame_cv()
         cv.imshow("Video Capture Test", frame)
 
         key_pressed = cv.waitKey(20)
@@ -35,5 +79,5 @@ def test_video_capture() -> None:
 
 
 if __name__ == "__main__":
-    test_video_capture()
+    tst_video_capture()
 
