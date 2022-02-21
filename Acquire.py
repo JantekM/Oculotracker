@@ -11,6 +11,7 @@ root = None
 class AcquisitionGui:
     gui = None #singleton instance of the Gui class
 
+
     def __init__(self, master=None):
         if AcquisitionGui.gui is None:
             AcquisitionGui.gui = self
@@ -18,6 +19,9 @@ class AcquisitionGui:
             raise BaseException('trying to overwrite the singleton instance')
 
         master.title("Oculotracker Training Data Acquisition Tool")
+
+        self.showPreview = tkinter.BooleanVar(value=True)
+
 
         # build ui
         self.Window = tkinter.ttk.Panedwindow(master, orient='vertical')
@@ -48,8 +52,7 @@ class AcquisitionGui:
         self.ShowPreviewCheckbox = tkinter.ttk.Checkbutton(self.CameraSettingsFrame)
         self.ShowPreviewCheckbox.configure(text='Show preview')
         self.ShowPreviewCheckbox.grid(column='0', columnspan='2', row='3')
-        self.ShowPreviewCheckbox.configure(command=self.ChangePathCallback)
-        self.ShowPreviewCheckbox.bind('<1>', self.callback, add='')
+        self.ShowPreviewCheckbox.configure(variable=self.showPreview)
 
         self.CameraSettingsFrame.configure(height='200', text='Camera Settings', width='150')
         self.CameraSettingsFrame.pack(fill='both', ipadx='5', ipady='5', side='top')
@@ -176,22 +179,22 @@ class AcquisitionGui:
         # Main widget
         self.main = self.Window
 
-        print(AcquisitionGui.gui)
 
-    def run(self):
-        self.main.mainloop()
-
-    def ChangePathCallback(self):
+    def ChangePathCallback(self, event=None):
         pass
 
-    def callback(self, event=None):
+    def ConstPoseCallback(self, event=None):
         pass
 
-    def ConstPoseCallback(self):
+    def CursorModeCallback(self, event=None):
         pass
 
-    def CursorModeCallback(self):
+    def ShowPreviewCallback(self, event=None):
         pass
+
+    def HidePreviewCallback(self, event=None):
+        pass
+
 
 def key_handler(event):
     # Replace the window's title with event.type: input key
@@ -213,16 +216,20 @@ def key_handler(event):
 
 def render_preview():
     global root
+    gui = AcquisitionGui.gui
 
-    root.update()
-    height = AcquisitionGui.gui.CameraPreviewCanvas.winfo_height()
-    width = AcquisitionGui.gui.CameraPreviewCanvas.winfo_width()
-    root.img = video_capture.get_frame_tk(height, width) # has to be declared here, or else garbage collector eats it
+    if gui.showPreview.get():
+        root.update()
+        height = gui.CameraPreviewCanvas.winfo_height()
+        width = gui.CameraPreviewCanvas.winfo_width()
+        root.img = video_capture.get_frame_tk(height, width) # has to be declared here, or else garbage collector eats it
 
-    y_offset = int((height - root.img.height()) /2)
-    x_offset = int((width - root.img.width()) / 2)
+        y_offset = int((height - root.img.height()) /2)
+        x_offset = int((width - root.img.width()) / 2)
 
-    AcquisitionGui.gui.CameraPreviewCanvas.create_image(x_offset, y_offset, anchor=tkinter.NW, image=root.img)
+        gui.CameraPreviewCanvas.create_image(x_offset, y_offset, anchor=tkinter.NW, image=root.img)
+    else:
+        gui.CameraPreviewCanvas.delete('all')
 
     #print("rendering now")
     root.after(video_capture.wait_period, render_preview)
@@ -240,9 +247,6 @@ def main() -> None:
     root.bind('<KeyPress>', key_handler)
     video_capture.start_capture()
     root.after(500, render_preview)
-
-
-
 
     root.mainloop()
     video_capture.stop_capture()
