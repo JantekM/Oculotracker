@@ -10,12 +10,13 @@ WIDTH = 1920
 FPS = 30
 
 capture = None
+wait_period: int = 1000
 #frame = None
 
 
 def start_capture(cam = CAMERA_ID, height = HEIGHT, width = WIDTH, fps = FPS):
     print("starting video capture")
-    global capture
+    global capture, wait_period
     capture = cv.VideoCapture(cam)
 
     #capture.release()
@@ -30,6 +31,7 @@ def start_capture(cam = CAMERA_ID, height = HEIGHT, width = WIDTH, fps = FPS):
         capture = None
         return False
 
+    wait_period = int (1000/fps)
     return True
 
 

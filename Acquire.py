@@ -6,7 +6,6 @@ import video_capture
 import cv2 as cv
 
 root = None
-#interactive = True  # if the windows accepts key strokes as commands (True) or as plain text (False)
 
 
 class AcquisitionGui:
@@ -109,21 +108,11 @@ class AcquisitionGui:
         self.KeyBindingsFrame = tkinter.ttk.Labelframe(self.OptionsFrame)
         self.KeyBindingsLabel = tkinter.ttk.Label(self.KeyBindingsFrame)
         self.KeyBindingsLabel.configure(text='''Show keybindings: H
-        Exit
-        Fullscreen
-        mode: Esc
+        Exit Fullscreen mode: Esc
         Record: Space
-        Record
-        out
-        of
-        border: B
-        Launch
-        Constant
-        Pose
-        Mode: Ctrl + P
-        Launch
-        Cursor
-        Mode: Ctrl + M
+        Launch Constant Pose Mode: Ctrl + P
+        Launch Cursor Mode: Ctrl + M
+        Record out of border: Ctrl + B 
         ''')
         self.KeyBindingsLabel.pack(side='top')
         self.KeyBindingsFrame.configure(height='200', text='Key bindings:', width='200')
@@ -207,14 +196,24 @@ class AcquisitionGui:
 def key_handler(event):
     # Replace the window's title with event.type: input key
     root.title("{}: {}".format(str(event.type), event.keysym))
+    ctrl_pressed = (event.state & 0x4) != 0
     if event.keysym == 'Escape':
         video_capture.stop_capture()
         cv.destroyAllWindows()
         root.destroy()
+    elif event.keysym == 'p':
+        if ctrl_pressed:
+            print("ctrl p")
+    elif event.keysym == 'm':
+        if ctrl_pressed:
+            print("ctrl m")
+    elif event.keysym == 'b':
+        if ctrl_pressed:
+            print("ctrl b")
 
 def render_preview():
     global root
-    wait_period: int = 33
+
     root.update()
     height = AcquisitionGui.gui.CameraPreviewCanvas.winfo_height()
     width = AcquisitionGui.gui.CameraPreviewCanvas.winfo_width()
@@ -225,8 +224,8 @@ def render_preview():
 
     AcquisitionGui.gui.CameraPreviewCanvas.create_image(x_offset, y_offset, anchor=tkinter.NW, image=root.img)
 
-    print("rendering now")
-    root.after(wait_period, render_preview)
+    #print("rendering now")
+    root.after(video_capture.wait_period, render_preview)
 
 def main() -> None:
     global root
