@@ -44,10 +44,24 @@ def get_frame_cv():
         raise BaseException('error reading from camera input')
     return frame
 
-def get_frame_tk():
+def get_frame_tk(canvas_height: int, canvas_width: int):
+    global capture
     frame = get_frame_cv()
-    #cv.imshow('first', frame)
-    blue, green, red = cv.split(frame)
+    capture_height = capture.get(cv.CAP_PROP_FRAME_HEIGHT)
+    capture_width = capture.get(cv.CAP_PROP_FRAME_WIDTH)
+
+    scale = min(canvas_height / capture_height, canvas_width / capture_width)
+
+    width = int(frame.shape[1] * scale)
+    height = int(frame.shape[0] * scale)
+    dim = (width, height)
+
+    resized = cv.resize(frame, dim, interpolation=cv.INTER_AREA)
+
+
+
+    #cv.imshow('first', resized)
+    blue, green, red = cv.split(resized)
     img = cv.merge((red, green, blue))
     #cv.imshow('second', img)
     im = Image.fromarray(img)

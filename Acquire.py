@@ -214,15 +214,17 @@ def key_handler(event):
 
 def render_preview():
     global root
-    wait_period: int = 333
-    root.img = video_capture.get_frame_tk()
+    wait_period: int = 33
+    root.update()
+    height = AcquisitionGui.gui.CameraPreviewCanvas.winfo_height()
+    width = AcquisitionGui.gui.CameraPreviewCanvas.winfo_width()
+    root.img = video_capture.get_frame_tk(height, width) # has to be declared here, or else garbage collector eats it
 
-    color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-             for i in range(1)]
+    y_offset = int((height - root.img.height()) /2)
+    x_offset = int((width - root.img.width()) / 2)
 
-    #AcquisitionGui.gui.CameraPreviewCanvas.configure(background=color)
-    AcquisitionGui.gui.CameraPreviewCanvas.create_image(0, 0, anchor=tkinter.NW, image=root.img)
-    # TODO put render stuff here
+    AcquisitionGui.gui.CameraPreviewCanvas.create_image(x_offset, y_offset, anchor=tkinter.NW, image=root.img)
+
     print("rendering now")
     root.after(wait_period, render_preview)
 
