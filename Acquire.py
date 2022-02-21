@@ -2,6 +2,7 @@ import os
 import random
 import tkinter
 import tkinter.ttk
+import tkinter.filedialog
 
 import video_capture
 import cv2 as cv
@@ -73,6 +74,7 @@ class AcquisitionGui:
         self.ChangePathButton = tkinter.ttk.Button(self.SeriesSettingsFrame)
         self.ChangePathButton.configure(text='Change path')
         self.ChangePathButton.grid(column='0', columnspan='2', padx='10', pady='10', row='1')
+        self.ChangePathButton.configure(command=self.ChangePathCallback)
 
         self.PersonLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
         self.PersonLabel.configure(text='Person:')
@@ -183,7 +185,7 @@ class AcquisitionGui:
 
 
     def ChangePathCallback(self, event=None):
-        pass
+        self.path.set(tkinter.filedialog.askdirectory(initialdir=self.path.get(), mustexist=False, title="Choose directory for storing data"))
 
     def ConstPoseCallback(self, event=None):
         pass
