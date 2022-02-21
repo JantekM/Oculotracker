@@ -1,3 +1,4 @@
+import os
 import random
 import tkinter
 import tkinter.ttk
@@ -21,6 +22,7 @@ class AcquisitionGui:
         master.title("Oculotracker Training Data Acquisition Tool")
 
         self.showPreview = tkinter.BooleanVar(value=True)
+        self.path = tkinter.StringVar(value=os.getcwd() + '\\Training Data')
 
 
         # build ui
@@ -61,7 +63,7 @@ class AcquisitionGui:
 
         self.DataPathText = tkinter.Message(self.SeriesSettingsFrame)
         self.DataPathText.configure(justify='left', takefocus=False,
-                                    text='C:/Lorem/Ipsum/C:/Lorem/Ipsum/C:/Lorem/Ipsum/C:/Lorem/Ipsum/C:/Lorem/Ipsum/',
+                                    textvariable=self.path,
                                     width='200')
         self.DataPathText.grid(column='1', row='0')
         self.DataPathLabel = tkinter.ttk.Label(self.SeriesSettingsFrame)
@@ -195,6 +197,8 @@ class AcquisitionGui:
     def HidePreviewCallback(self, event=None):
         pass
 
+def recording_window(mode: str, path: str):
+    pass
 
 def key_handler(event):
     # Replace the window's title with event.type: input key
