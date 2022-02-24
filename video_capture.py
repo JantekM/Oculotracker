@@ -37,7 +37,11 @@ def start_capture(cam = CAMERA_ID, height = HEIGHT, width = WIDTH, fps = FPS):
 
 def stop_capture():
     global capture
+    if capture is None:
+        capture = cv.VideoCapture(1)
     capture.release()
+
+
 
 def get_frame_cv():
     global capture
@@ -95,5 +99,6 @@ def tst_video_capture() -> None:
 
 
 if __name__ == "__main__":
-    tst_video_capture()
+    #start_capture()
+    stop_capture()
 

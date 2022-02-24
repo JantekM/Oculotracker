@@ -1,5 +1,6 @@
 import os
 import random
+import time
 import tkinter
 import tkinter.ttk
 import tkinter.filedialog
@@ -11,8 +12,7 @@ root = None
 
 
 class AcquisitionGui:
-    gui = None #singleton instance of the Gui class
-
+    gui = None  # singleton instance of the Gui class
 
     def __init__(self, master=None):
         if AcquisitionGui.gui is None:
@@ -24,7 +24,7 @@ class AcquisitionGui:
 
         self.showPreview = tkinter.BooleanVar(value=True)
         self.path = tkinter.StringVar(value=os.getcwd() + '\\Training Data')
-
+        self.recordingMode = False
 
         # build ui
         self.Window = tkinter.ttk.Panedwindow(master, orient='vertical')
@@ -183,12 +183,12 @@ class AcquisitionGui:
         # Main widget
         self.main = self.Window
 
-
     def ChangePathCallback(self, event=None):
-        self.path.set(tkinter.filedialog.askdirectory(initialdir=self.path.get(), mustexist=False, title="Choose directory for storing data"))
+        self.path.set(tkinter.filedialog.askdirectory(initialdir=self.path.get(), mustexist=False,
+                                                      title="Choose directory for storing data"))
 
     def ConstPoseCallback(self, event=None):
-        pass
+        recording_mode(mode='pose')
 
     def CursorModeCallback(self, event=None):
         pass
@@ -199,17 +199,45 @@ class AcquisitionGui:
     def HidePreviewCallback(self, event=None):
         pass
 
-def recording_window(mode: str, path: str):
-    pass
+
+def recording_mode(mode: str = None, path: str = None):
+    global root
+    gui = AcquisitionGui.gui
+    gui.recordingMode = True
+    gui.Window.pack_forget()
+    # tkinter.PanedWindow.pack_forget()
+    # time.sleep(2)
+    # gui.Window.pack()
+    root.attributes('-fullscreen', True)
+    root.attributes('-alpha', 0.8)
+    root.overrideredirect(True)
+    # print("hiding window")
+
+
+def gui_mode():
+    global root
+    gui = AcquisitionGui.gui
+    gui.recordingMode = False
+    gui.Window.pack()
+    # tkinter.PanedWindow.pack_forget()
+    # time.sleep(2)
+    # gui.Window.pack()
+    root.attributes('-fullscreen', False)
+    root.attributes('-alpha', 1)
+    root.overrideredirect(False)
+
 
 def key_handler(event):
     # Replace the window's title with event.type: input key
     root.title("{}: {}".format(str(event.type), event.keysym))
     ctrl_pressed = (event.state & 0x4) != 0
     if event.keysym == 'Escape':
-        video_capture.stop_capture()
-        cv.destroyAllWindows()
-        root.destroy()
+        if AcquisitionGui.gui.recordingMode:
+            gui_mode()
+        else:
+            video_capture.stop_capture()
+            cv.destroyAllWindows()
+            root.destroy()
     elif event.keysym == 'p':
         if ctrl_pressed:
             print("ctrl p")
@@ -220,6 +248,7 @@ def key_handler(event):
         if ctrl_pressed:
             print("ctrl b")
 
+
 def render_preview():
     global root
     gui = AcquisitionGui.gui
@@ -228,28 +257,30 @@ def render_preview():
         root.update()
         height = gui.CameraPreviewCanvas.winfo_height()
         width = gui.CameraPreviewCanvas.winfo_width()
-        root.img = video_capture.get_frame_tk(height, width) # has to be declared here, or else garbage collector eats it
+        root.img = video_capture.get_frame_tk(height,
+                                              width)  # has to be declared here, or else garbage collector eats it
 
-        y_offset = int((height - root.img.height()) /2)
+        y_offset = int((height - root.img.height()) / 2)
         x_offset = int((width - root.img.width()) / 2)
 
         gui.CameraPreviewCanvas.create_image(x_offset, y_offset, anchor=tkinter.NW, image=root.img)
     else:
         gui.CameraPreviewCanvas.delete('all')
 
-    #print("rendering now")
+    # print("rendering now")
     root.after(video_capture.wait_period, render_preview)
+
 
 def main() -> None:
     global root
     root = tkinter.Tk()
     AcquisitionGui(root)
 
-    #root.title("Oculotracker Training Data Acquisition Tool")
-    #root.geometry(200,300)
-    #root.attributes('-fullscreen', True)
-    #root.attributes('-alpha', 0.8)
-    #root.overrideredirect(1)
+    # root.title("Oculotracker Training Data Acquisition Tool")
+    # root.geometry(200,300)
+    # root.attributes('-fullscreen', True)
+    # root.attributes('-alpha', 0.8)
+    # root.overrideredirect(1)
     root.bind('<KeyPress>', key_handler)
     video_capture.start_capture()
     root.after(500, render_preview)
