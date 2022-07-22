@@ -8,6 +8,10 @@ import tkinter.filedialog
 import video_capture
 import cv2 as cv
 
+from datetime import datetime
+import json
+from exif import Image
+
 root = None
 
 
@@ -25,6 +29,7 @@ class AcquisitionGui:
         self.showPreview = tkinter.BooleanVar(value=True)
         self.path = tkinter.StringVar(value=os.getcwd() + '\\Training Data')
         self.recordingMode = False
+        self.spacePressed = False
 
         # build ui
         self.Window = tkinter.ttk.Panedwindow(master, orient='vertical')
@@ -203,15 +208,17 @@ class AcquisitionGui:
 def recording_mode(mode: str = None, path: str = None):
     global root
     gui = AcquisitionGui.gui
-    gui.recordingMode = True
-    gui.Window.pack_forget()
-    # tkinter.PanedWindow.pack_forget()
-    # time.sleep(2)
-    # gui.Window.pack()
-    root.attributes('-fullscreen', True)
-    root.attributes('-alpha', 0.8)
-    root.overrideredirect(True)
-    # print("hiding window")
+    if not gui.recordingMode:
+        gui.recordingMode = True
+        gui.Window.pack_forget()
+        # tkinter.PanedWindow.pack_forget()
+        # time.sleep(2)
+        # gui.Window.pack()
+        root.attributes('-fullscreen', True)
+        root.attributes('-alpha', 0.8)
+        root.config(cursor="target")
+        root.overrideredirect(True)
+        # print("hiding window")
 
 
 def gui_mode():
@@ -224,6 +231,7 @@ def gui_mode():
     # gui.Window.pack()
     root.attributes('-fullscreen', False)
     root.attributes('-alpha', 1)
+    root.config(cursor="arrow")
     root.overrideredirect(False)
 
 
@@ -247,13 +255,20 @@ def key_handler(event):
     elif event.keysym == 'b':
         if ctrl_pressed:
             print("ctrl b")
+    elif event.keysym == 'space':
+        AcquisitionGui.gui.spacePressed = True
+
+
+def key_release_handler(event):
+    if event.keysym == 'space':
+        AcquisitionGui.gui.spacePressed = False
 
 
 def render_preview():
     global root
     gui = AcquisitionGui.gui
 
-    if gui.showPreview.get():
+    if gui.showPreview.get() and not gui.recordingMode:
         root.update()
         height = gui.CameraPreviewCanvas.winfo_height()
         width = gui.CameraPreviewCanvas.winfo_width()
@@ -267,8 +282,54 @@ def render_preview():
     else:
         gui.CameraPreviewCanvas.delete('all')
 
+    if AcquisitionGui.gui.recordingMode and AcquisitionGui.gui.spacePressed:
+        # root.update()
+
+        # height = gui.CameraPreviewCanvas.winfo_height()
+        # width = gui.CameraPreviewCanvas.winfo_width()
+        save_frame()
+        pass
+
     # print("rendering now")
     root.after(video_capture.wait_period, render_preview)
+
+
+def save_frame():
+    global root
+    gui = AcquisitionGui.gui
+    frame = video_capture.get_frame_cv()
+    t = datetime.now()
+    filename = t.strftime('%H.%M.%S.%f') + '.jpg'
+    full_path = gui.path.get() + '\\' + gui.PersonEntry.get() + '\\' + t.strftime("%Y.%m.%d")
+    fname = full_path + '\\' + filename
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+    #print(full_path)
+    cv.imwrite(fname, frame)
+
+    x = root.winfo_pointerx() - root.winfo_rootx()
+    y = root.winfo_pointery() - root.winfo_rooty()
+    metadata = {
+        "timestamp": t.timestamp(),
+        "x": x,
+        "y": y,
+        "person": gui.PersonEntry.get(),
+        "fps": video_capture.FPS,
+        "place": gui.PlaceEntry.get(),
+        "lightConditions": gui.LightEntry.get(),
+        "info": gui.AdditionalInfoEntry.get(),
+        "camera": video_capture.CAMERA_ID
+    }
+
+    #print(json.dumps(metadata))
+    with open(fname, 'rb') as new_image_file:
+        img = Image(new_image_file)
+
+    img.user_comment = json.dumps(metadata)
+    with open(fname, 'wb') as new_image_file:
+        new_image_file.write(img.get_file())
+
+
 
 
 def main() -> None:
@@ -281,7 +342,8 @@ def main() -> None:
     # root.attributes('-fullscreen', True)
     # root.attributes('-alpha', 0.8)
     # root.overrideredirect(1)
-    root.bind('<KeyPress>', key_handler)
+    root.bind('<Key>', key_handler)
+    root.bind('<KeyRelease>', key_release_handler)
     video_capture.start_capture()
     root.after(500, render_preview)
 
