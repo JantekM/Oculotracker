@@ -4,7 +4,9 @@ import json
 from exif import Image
 import numpy as np
 
-eye_landmarks_right = [226, 113, 225, 224, 223, 222, 221, 189, 244, 112, 26, 22, 23, 24, 110, 25]
+eye_landmarks_right = [33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7]
+#[226, 113, 225, 224, 223, 222, 221, 189, 244, 112, 26, 22, 23, 24, 110, 25]
+
 eye_landmarks_left =  [446, 342, 445, 444, 443, 442, 441, 413, 464, 341, 256, 252, 253, 254, 339, 255]
 #https://github.com/google/mediapipe/blob/a908d668c730da128dfa8d9f6bd25d519d006692/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
 
@@ -30,21 +32,33 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
             landmarks = results.multi_face_landmarks[0].landmark
 
             if with_ROI:
+                #h, w = image.shape[:2]
                 coords = get_facemesh_coords(landmarks, image)
-                coords = coords[:, [0,1]] #odrzucenie współrzędnej z
-                coords_eyes = (coords[eye_landmarks_right, :], coords[eye_landmarks_right, :])
-                ROI_coords_right = np.min(coords_eyes[0][0]), \
-                                   np.max(coords_eyes[0][0]), \
-                                   np.min(coords_eyes[0][1]), \
-                                   np.max(coords_eyes[0][1])
+                coords = coords[:, [0,1]] #odrzucenie współrzędnej Z
+                coords_eyes = (coords[eye_landmarks_right, :], coords[eye_landmarks_left, :])
+                ROI_coords_right = np.min(coords_eyes[0][:,0]), \
+                                   np.max(coords_eyes[0][:,0]), \
+                                   np.min(coords_eyes[0][:,1]), \
+                                   np.max(coords_eyes[0][:,1])
 
-                ROI_coords_left =  np.min(coords_eyes[1][0]), \
-                                   np.max(coords_eyes[1][0]), \
-                                   np.min(coords_eyes[1][1]), \
-                                   np.max(coords_eyes[1][1])
+                ROI_coords_left =  np.min(coords_eyes[1][:,0]), \
+                                   np.max(coords_eyes[1][:,0]), \
+                                   np.min(coords_eyes[1][:,1]), \
+                                   np.max(coords_eyes[1][:,1])
                 ROI_right = image[ROI_coords_right[0]:ROI_coords_right[1], ROI_coords_right[2]:ROI_coords_right[3]]
                 ROI_left  = image[ROI_coords_left[0]:ROI_coords_left[1], ROI_coords_left[2]:ROI_coords_left[3]]
                 ROIs = (ROI_right, ROI_left)
+
+                # points = [ROI_coords_right[0], ROI_coords_right[2]], [ROI_coords_right[1], ROI_coords_right[3]]
+                # for point in points:
+                #    cv2.circle(image, point, radius=37, color=(0,0,255))
+                # for point in coords_eyes[0]:
+                #    cv2.circle(image, point, radius=7, color=(0, 0, 255))
+                #cv2.circle(image, (ROI_coords_right[0], ROI_coords_right[1]), radius = 7, color = (255, 255,0))
+                cv2.imshow('right', ROI_right)
+                cv2.imshow('left', ROI_left)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
             else:
                 ROIs = None
 
