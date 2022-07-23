@@ -4,11 +4,11 @@ import json
 from exif import Image
 import numpy as np
 
-eye_landmarks_right = [33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7]
-#[226, 113, 225, 224, 223, 222, 221, 189, 244, 112, 26, 22, 23, 24, 110, 25]
+eye_landmarks_right = [226, 113, 225, 224, 223, 222, 221, 189, 244, 112, 26, 22, 23, 24, 110, 25]
+#[33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7]
 
 eye_landmarks_left =  [446, 342, 445, 444, 443, 442, 441, 413, 464, 341, 256, 252, 253, 254, 339, 255]
-#https://github.com/google/mediapipe/blob/a908d668c730da128dfa8d9f6bd25d519d006692/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
+# https://github.com/google/mediapipe/blob/a908d668c730da128dfa8d9f6bd25d519d006692/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
 
 def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=0.5, with_ROI=False):
     mp_face_mesh = mp.solutions.face_mesh
