@@ -47,19 +47,8 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
                                    np.max(coords_eyes[1][:,1])
                 ROI_right = image[ROI_coords_right[2]:ROI_coords_right[3], ROI_coords_right[0]:ROI_coords_right[1]]
                 ROI_left  = image[ROI_coords_left[2]:ROI_coords_left[3], ROI_coords_left[0]:ROI_coords_left[1]]
-                ROIs = (ROI_right, ROI_left)
+                ROIs = (ROI_right, ROI_left, ROI_coords_right, ROI_coords_left)
 
-
-                # points = [ROI_coords_right[0], ROI_coords_right[2]], [ROI_coords_right[1], ROI_coords_right[3]]
-                # for point in points:
-                #    cv2.circle(image, point, radius=37, color=(0,0,255))
-                # for point in coords_eyes[0]:
-                #    cv2.circle(image, point, radius=7, color=(0, 0, 255))
-                #cv2.circle(image, (ROI_coords_right[0], ROI_coords_right[1]), radius = 7, color = (255, 255,0))
-                cv2.imshow('right', ROI_right)
-                cv2.imshow('left', ROI_left)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
             else:
                 ROIs = None
 
