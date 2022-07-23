@@ -45,9 +45,10 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
                                    np.max(coords_eyes[1][:,0]), \
                                    np.min(coords_eyes[1][:,1]), \
                                    np.max(coords_eyes[1][:,1])
-                ROI_right = image[ROI_coords_right[0]:ROI_coords_right[1], ROI_coords_right[2]:ROI_coords_right[3]]
-                ROI_left  = image[ROI_coords_left[0]:ROI_coords_left[1], ROI_coords_left[2]:ROI_coords_left[3]]
+                ROI_right = image[ROI_coords_right[2]:ROI_coords_right[3], ROI_coords_right[0]:ROI_coords_right[1]]
+                ROI_left  = image[ROI_coords_left[2]:ROI_coords_left[3], ROI_coords_left[0]:ROI_coords_left[1]]
                 ROIs = (ROI_right, ROI_left)
+
 
                 # points = [ROI_coords_right[0], ROI_coords_right[2]], [ROI_coords_right[1], ROI_coords_right[3]]
                 # for point in points:
