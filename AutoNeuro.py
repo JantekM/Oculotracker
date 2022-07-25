@@ -5,16 +5,17 @@ from exif import Image
 import numpy as np
 
 eye_landmarks_right = [226, 113, 225, 224, 223, 222, 221, 189, 244, 112, 26, 22, 23, 24, 110, 25]
-#[33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7]
+# [33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7]
 
-eye_landmarks_left =  [446, 342, 445, 444, 443, 442, 441, 413, 464, 341, 256, 252, 253, 254, 339, 255]
+eye_landmarks_left = [446, 342, 445, 444, 443, 442, 441, 413, 464, 341, 256, 252, 253, 254, 339, 255]
+
+
 # https://github.com/google/mediapipe/blob/a908d668c730da128dfa8d9f6bd25d519d006692/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
 
 def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=0.5, with_ROI=False):
     mp_face_mesh = mp.solutions.face_mesh
 
     output = []
-
 
     with mp_face_mesh.FaceMesh(
             static_image_mode=True,
@@ -27,26 +28,26 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
             results = face_mesh.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
             if not results.multi_face_landmarks:
-                raise Exception(f'Błąd, nie wykryto twarzy na obrazie ćwiczebnym!') # TODO: porządny logging
+                raise Exception(f'Błąd, nie wykryto twarzy na obrazie ćwiczebnym!')  # TODO: porządny logging
 
             landmarks = results.multi_face_landmarks[0].landmark
 
             if with_ROI:
-                #h, w = image.shape[:2]
+                # h, w = image.shape[:2]
                 coords = get_facemesh_coords(landmarks, image)
-                coords = coords[:, [0,1]] #odrzucenie współrzędnej Z
+                coords = coords[:, [0, 1]]  # odrzucenie współrzędnej Z
                 coords_eyes = (coords[eye_landmarks_right, :], coords[eye_landmarks_left, :])
-                ROI_coords_right = np.min(coords_eyes[0][:,0]), \
-                                   np.max(coords_eyes[0][:,0]), \
-                                   np.min(coords_eyes[0][:,1]), \
-                                   np.max(coords_eyes[0][:,1])
+                ROI_coords_right = np.min(coords_eyes[0][:, 0]), \
+                                   np.max(coords_eyes[0][:, 0]), \
+                                   np.min(coords_eyes[0][:, 1]), \
+                                   np.max(coords_eyes[0][:, 1])
 
-                ROI_coords_left =  np.min(coords_eyes[1][:,0]), \
-                                   np.max(coords_eyes[1][:,0]), \
-                                   np.min(coords_eyes[1][:,1]), \
-                                   np.max(coords_eyes[1][:,1])
+                ROI_coords_left = np.min(coords_eyes[1][:, 0]), \
+                                  np.max(coords_eyes[1][:, 0]), \
+                                  np.min(coords_eyes[1][:, 1]), \
+                                  np.max(coords_eyes[1][:, 1])
                 ROI_right = image[ROI_coords_right[2]:ROI_coords_right[3], ROI_coords_right[0]:ROI_coords_right[1]]
-                ROI_left  = image[ROI_coords_left[2]:ROI_coords_left[3], ROI_coords_left[0]:ROI_coords_left[1]]
+                ROI_left = image[ROI_coords_left[2]:ROI_coords_left[3], ROI_coords_left[0]:ROI_coords_left[1]]
                 ROIs = (ROI_right, ROI_left, ROI_coords_right, ROI_coords_left)
 
             else:
@@ -56,9 +57,9 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
                 img = Image(new_image_file)
             metadata = json.loads(img.user_comment)
 
-
             output.append({"landmarks": landmarks, "ROIs": ROIs, "cursor": (metadata["x"], metadata['y'])})
         return output
+
 
 def get_facemesh_coords(landmark_list, img):
     h, w = img.shape[:2]  # grab width and height from image
@@ -67,8 +68,18 @@ def get_facemesh_coords(landmark_list, img):
     return np.multiply(xyz, [w, h, w]).astype(int)
 
 
+if __name__ == "__main__":
+    out = face_landmarks_from_photo_batch(['Training Data\\Jantek Mikulski\\2022.07.22\\19.21.49.547198.jpg',
+                                           'Training Data\\Jantek Mikulski\\2022.07.22\\19.21.43.029915.jpg',
+                                           'Training Data\\Jantek Mikulski\\2022.07.22\\19.23.05.731117.jpg',
+                                           'Training Data\\Jantek Mikulski\\2022.07.22\\19.23.49.733069.jpg',
+                                           'Training Data\\Jantek Mikulski\\2022.07.22\\19.24.18.844586.jpg'],
+                                          with_ROI=True)
+    from Morphology import analyze_eyes
 
+    _ = analyze_eyes(out[0]["ROIs"], debug=True)
+    _ = analyze_eyes(out[1]["ROIs"], debug=True)
+    _ = analyze_eyes(out[2]["ROIs"], debug=True)
+    _ = analyze_eyes(out[3]["ROIs"], debug=True)
+    _ = analyze_eyes(out[4]["ROIs"], debug=True)
 
-
-
-face_landmarks_from_photo_batch(['Training Data\\Jantek Mikulski\\2022.07.22\\19.21.49.547198.jpg'], with_ROI=True)
