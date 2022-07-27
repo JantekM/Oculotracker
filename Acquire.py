@@ -5,12 +5,12 @@ import tkinter
 import tkinter.ttk
 import tkinter.filedialog
 
+from Exif import save_exif
 import video_capture
 import cv2 as cv
 
 from datetime import datetime
-import json
-from exif import Image
+
 
 root = None
 
@@ -321,13 +321,8 @@ def save_frame():
         "camera": video_capture.CAMERA_ID
     }
 
-    #print(json.dumps(metadata))
-    with open(fname, 'rb') as new_image_file:
-        img = Image(new_image_file)
+    save_exif(fname, metadata)
 
-    img.user_comment = json.dumps(metadata)
-    with open(fname, 'wb') as new_image_file:
-        new_image_file.write(img.get_file())
 
 
 

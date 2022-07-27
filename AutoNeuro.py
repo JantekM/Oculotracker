@@ -1,8 +1,9 @@
 import cv2
 import mediapipe as mp
-import json
-from exif import Image
+
 import numpy as np
+
+from Exif import load_exif
 
 eye_landmarks_right = [226, 113, 225, 224, 223, 222, 221, 189, 244, 112, 26, 22, 23, 24, 110, 25]
 # [33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7]
@@ -53,9 +54,7 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
             else:
                 ROIs = None
 
-            with open(file, 'rb') as new_image_file:
-                img = Image(new_image_file)
-            metadata = json.loads(img.user_comment)
+            metadata = load_exif(file)
 
             output.append({"landmarks": landmarks, "ROIs": ROIs, "cursor": (metadata["x"], metadata['y'])})
         return output
