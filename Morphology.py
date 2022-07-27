@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import random as rng
-
 
 def blob_process(img, detector):
     img = cv2.erode(img, None, iterations=2) #1
