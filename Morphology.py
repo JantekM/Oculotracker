@@ -2,9 +2,12 @@ import cv2
 import numpy as np
 
 def blob_process(img, detector):
+    #img = cv2.bitwise_not(img)
+    #cv2.imshow("img first", img)
     img = cv2.erode(img, None, iterations=2) #1
     img = cv2.dilate(img, None, iterations=4) #2
     img = cv2.medianBlur(img, 5) #3
+    #cv2.imshow("img changed", img)
     blob = detector.detect(img)
     assert len(blob) > 0
     if len(blob) > 1:
@@ -54,13 +57,20 @@ def connected_segments(img, n=2):
     return {"stats": stats[ind_sorted, :], "centroids": centroids[ind_sorted, :]}
 
 
-def analyze_ROI(image, offset, debug=False):
+def analyze_ROI(image, debug=False):
     img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     img = cv2.equalizeHist(img)
 
     detector_params = cv2.SimpleBlobDetector_Params()
-    detector_params.filterByCircularity
-    detector_params.minCircularity = 0.35
+    detector_params.filterByArea = True
+    detector_params.minArea = 10
+    detector_params.maxArea = 10000
+    detector_params.filterByColor = False
+    detector_params.filterByInertia = True
+    detector_params.minInertiaRatio = 0.25
+    detector_params.maxInertiaRatio = 1
+    detector_params.filterByCircularity = False
+    detector_params.filterByConvexity = False
     detector = cv2.SimpleBlobDetector_create(detector_params)
 
     blurred = cv2.blur(img, (3, 3))  # TODO: parametr do modelu
@@ -103,8 +113,8 @@ def analyze_ROI(image, offset, debug=False):
 
 def analyze_eyes(ROIs, debug=False):
     ROI_right, ROI_left, ROI_coords_right, ROI_coords_left = ROIs
-    landmarks_right = analyze_ROI(ROI_right, (ROI_coords_right[0], ROI_coords_right[2]), debug)
-    landmarks_left = analyze_ROI(ROI_left, (ROI_coords_left[0], ROI_coords_left[2]), debug)
+    landmarks_right = analyze_ROI(ROI_right, debug)
+    landmarks_left = analyze_ROI(ROI_left, debug)
     if debug:
         print(landmarks_right, landmarks_left, ROI_coords_right, ROI_coords_left)
     return landmarks_right, landmarks_left, ROI_coords_right, ROI_coords_left
