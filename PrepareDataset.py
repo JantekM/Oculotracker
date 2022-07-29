@@ -10,6 +10,20 @@ import AutoNeuro
 import Morphology
 
 
+def load_dataset(file: str = 'newest'):
+    if file == 'newest':
+        for (_, _, filenames) in walk(getcwd() + '\\Training Data\\Datasets'):
+            #print(dirpath, dirnames, filenames)
+            filenames.sort()
+            filename = filenames[-1]
+            break
+    else:
+        filename = file
+    npz = np.load(getcwd() + '\\Training Data\\Datasets\\' + filename)
+    x, y = npz['arr_0'], npz['arr_1']
+    return x, y
+
+
 def prepare_dataset(filename: str = None, must_include: str = None, exclude: str = None,
                     person: str = 'Jantek Mikulski'):
     if filename is None:
@@ -47,7 +61,6 @@ def prepare_dataset(filename: str = None, must_include: str = None, exclude: str
         flat = flatten_landmarks(landmarks, res_morpho)
         assert flat.shape == (1544,)
 
-
         dataset_x.append(flat)
         dataset_y.append(cursor)
     dataset_x_arr = np.array(dataset_x)
@@ -58,9 +71,9 @@ def prepare_dataset(filename: str = None, must_include: str = None, exclude: str
 def flatten_landmarks(landmarks, res_morpho) -> np.ndarray:
     morpho_landmarks = []
     for idx, tpl in enumerate(res_morpho):
-        if  idx < 2:
-            for idx, dct in enumerate(tpl):
-                if idx < 4:
+        if idx < 2:
+            for idx2, dct in enumerate(tpl):
+                if idx2 < 4:
                     stats = dct['stats']
                     stats = stats.reshape(-1).tolist()
                     for num in stats:
@@ -87,7 +100,6 @@ def flatten_landmarks(landmarks, res_morpho) -> np.ndarray:
     return np.hstack((morpho_landmarks, xyz))
 
 
-
 def scope_files(person: str):
     # photos = np.array([""], dtype=np.str_)
     photos = None
@@ -103,6 +115,7 @@ def scope_files(person: str):
     return photos
 
 
-
-
-prepare_dataset()
+if __name__ == "__main__":
+    #prepare_dataset(filename="test pose", must_include="test pose")
+    load_dataset('test pose.npz.npz')
+    pass
