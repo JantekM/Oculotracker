@@ -25,7 +25,7 @@ def load_dataset(file: str = 'newest'):
 
 
 def prepare_dataset(filename: str = None, must_include: str = None, exclude: str = None,
-                    person: str = 'Jantek Mikulski'):
+                    person: str = 'Jantek Mikulski', debug = False, custom: dict = None):
     if filename is None:
         t = datetime.now()
         filename = t.strftime('%Y.%m.%d.%H.%M.%S')
@@ -33,6 +33,8 @@ def prepare_dataset(filename: str = None, must_include: str = None, exclude: str
     dataset_x = []
     dataset_y = []
     file_paths = scope_files(person)
+    if custom is None:
+        custom = Morphology.defaultOptions()
     for photo in file_paths:
         metadata = load_exif(photo)
         if must_include:
@@ -47,8 +49,8 @@ def prepare_dataset(filename: str = None, must_include: str = None, exclude: str
         landmarks, ROIs, cursor = res_autoneuro["landmarks"], res_autoneuro["ROIs"], res_autoneuro["cursor"]
         do_continue = False
         try:
-            res_morpho = Morphology.analyze_eyes(ROIs)
-            print("all good")
+            res_morpho = Morphology.analyze_eyes(ROIs, debug, custom)
+            #print("all good")
         except AssertionError:
             print(f"assertion error occured when analyzing frame {photo}, skipping")
             do_continue = True
@@ -66,6 +68,7 @@ def prepare_dataset(filename: str = None, must_include: str = None, exclude: str
     dataset_x_arr = np.array(dataset_x)
     dataset_y_arr = np.array(dataset_y)
     np.savez(full_path, dataset_x_arr, dataset_y_arr)
+    print(f"Finished preparing the dataset. Saved under {full_path}.")
 
 
 def flatten_landmarks(landmarks, res_morpho) -> np.ndarray:
@@ -116,6 +119,6 @@ def scope_files(person: str):
 
 
 if __name__ == "__main__":
-    #prepare_dataset(filename="test pose", must_include="test pose")
-    load_dataset('test pose.npz.npz')
+    prepare_dataset()
+    #load_dataset('test pose.npz.npz')
     pass

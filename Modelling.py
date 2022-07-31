@@ -12,8 +12,11 @@ import tensorflow as tf
 
 from tensorflow import keras
 from tensorflow.keras import layers
+#from tensorflow.keras import callbacks
 
 import winsound
+
+
 
 print(tf.__version__)
 #%%
@@ -25,13 +28,21 @@ print(tf.__version__)
 #                           na_values='?', comment='\t',
 #                           sep=' ', skipinitialspace=True)
 
-x,y = PrepareDataset.load_dataset('2022.07.28.12.32.12.npz')
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=42)
+x,y = PrepareDataset.load_dataset('newest')
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20, random_state=42)
 #x_train, y_train = x, y
 #x_train = y
 #%%
 normalizer = tf.keras.layers.Normalization(axis=-1)
 normalizer.adapt(x_train)
+
+lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+  0.005,
+  decay_steps=56*100,
+  decay_rate=1,
+  staircase=False)
+
+
 #%%
 print(normalizer.mean.numpy())
 first = np.array(x_train[:1])
@@ -47,10 +58,14 @@ with np.printoptions(precision=2, suppress=True):
 model = tf.keras.Sequential([
     normalizer,
     layers.Dense(units=256, input_shape=(x_train.shape[1],), activation='relu'),
+    #layers.Dropout(rate = 0.05),
     #layers.Dense(units=2048, activation='relu'),
     #layers.Dense(units=128, activation='relu'), ##
+    #layers.Dense(units=128, activation='relu'),
     layers.Dense(units=128, activation='relu'),
+    #layers.Dropout(rate = 0.05),
     layers.Dense(units=128, activation='relu'),
+    #layers.Dropout(rate = 0.05),
     layers.Dense(units=32, activation='relu'),
     layers.Dense(units=2)
 ])
@@ -62,7 +77,7 @@ print(model.predict(x_train[:10]))
 
 #%%
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=00.001),
+    optimizer=tf.keras.optimizers.Adam(0.01),
     loss='mean_squared_error')
 
 #%%time
@@ -78,11 +93,13 @@ history_first10 = model.fit(
 history = model.fit(
     x_train,
     y_train,
-    epochs=1000,
+    epochs=500,
     # Suppress logging.
     #verbose=1,
     # Calculate validation results on 20% of the training data.
-    validation_split = 0.1)
+    validation_split = 0.1,
+    #callbacks=get_callbacks("lol")
+)
 #%%
 def plot_loss(history):
   plt.plot(history.history['loss'], label='loss')

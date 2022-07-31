@@ -1,12 +1,12 @@
 import cv2
 import numpy as np
 
-def blob_process(img, detector):
+def blob_process(img, detector, custom: dict):
     #img = cv2.bitwise_not(img)
     #cv2.imshow("img first", img)
-    img = cv2.erode(img, None, iterations=2) #1
-    img = cv2.dilate(img, None, iterations=4) #2
-    img = cv2.medianBlur(img, 5) #3
+    img = cv2.erode(img, None, iterations=custom['blobErode']) #1
+    img = cv2.dilate(img, None, iterations=custom['blobDilate']) #2
+    img = cv2.medianBlur(img, custom['blobBlur']) #3
     #cv2.imshow("img changed", img)
     blob = detector.detect(img)
     assert len(blob) > 0
@@ -21,8 +21,8 @@ def blob_process(img, detector):
         blob = blob[0]
     return {"coords": blob.pt, "size": blob.size}
 
-def tophat(img):
-    tophat_size = 10  # TODO parametr
+def tophat(img, custom: dict):
+    tophat_size = custom['tophatSize']
     tophat_shape = cv2.MORPH_ELLIPSE
     operation = cv2.MORPH_TOPHAT
 
@@ -56,44 +56,62 @@ def connected_segments(img, n=2):
     ind_sorted = ind[stats[ind, cv2.CC_STAT_LEFT].argsort()]
     return {"stats": stats[ind_sorted, :], "centroids": centroids[ind_sorted, :]}
 
+def defaultOptions()-> dict:
+    custom = {
+        'minArea': 10,
+        'maxArea': 10000,
+        'minInertia': 0.15,
+        'maxInertia': 1,
+        'threshold1': 24,
+        'threshold2': 32,
+        'threshold3': 62,
+        'threshold4': 75,
+        'tophatSize': 10,
+        'blobErode': 2,
+        'blobDilate': 4,
+        'blobBlur': 5
+    }
+    return custom
 
-def analyze_ROI(image, debug=False):
+def analyze_ROI(image, debug=False, custom: dict = None):
+    if custom is None:
+        custom = defaultOptions()
     img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     img = cv2.equalizeHist(img)
 
     detector_params = cv2.SimpleBlobDetector_Params()
     detector_params.filterByArea = True
-    detector_params.minArea = 10
-    detector_params.maxArea = 10000
+    detector_params.minArea = custom['minArea']
+    detector_params.maxArea = custom['maxArea']
     detector_params.filterByColor = False
     detector_params.filterByInertia = True
-    detector_params.minInertiaRatio = 0.15
-    detector_params.maxInertiaRatio = 1
+    detector_params.minInertiaRatio = custom['minInertia']
+    detector_params.maxInertiaRatio = custom['maxInertia']
     detector_params.filterByCircularity = False
     detector_params.filterByConvexity = False
     detector = cv2.SimpleBlobDetector_create(detector_params)
 
-    blurred = cv2.blur(img, (3, 3))  # TODO: parametr do modelu
-    tophatted = tophat(img)
-    grad = gradient(blurred)
+    blurred = cv2.blur(img, (3, 3))
+    tophatted = tophat(img, custom)
+    #grad = gradient(blurred)
 
-    # TODO: parametry do modelu
+
     # 24 sama źrenica
     # 32 zarys powieki
     # 62 zarys kątów oka
 
-    _, thr1 = cv2.threshold(blurred, 24, 255, cv2.THRESH_BINARY)
-    _, thr2 = cv2.threshold(blurred, 32, 255, cv2.THRESH_BINARY)
-    _, thr3 = cv2.threshold(blurred, 62, 255, cv2.THRESH_BINARY)
-    _, thr4 = cv2.threshold(tophatted, 75, 255, cv2.THRESH_BINARY)
+    _, thr1 = cv2.threshold(blurred, custom['threshold1'], 255, cv2.THRESH_BINARY)
+    _, thr2 = cv2.threshold(blurred, custom['threshold2'], 255, cv2.THRESH_BINARY)
+    _, thr3 = cv2.threshold(blurred, custom['threshold3'], 255, cv2.THRESH_BINARY)
+    _, thr4 = cv2.threshold(tophatted, custom['threshold4'], 255, cv2.THRESH_BINARY)
 
     white_triangles = connected_segments(thr4, n=2)
     iris_and_reflex = connected_segments(thr1, n=2)
     eye_borders = connected_segments(thr3, n=1)
     eye_borders_v2 = connected_segments(thr2, n=1)
-    blob1 = blob_process(thr1, detector)
-    blob2 = blob_process(thr2, detector)
-    blob3 = blob_process(thr3, detector)
+    blob1 = blob_process(thr1, detector, custom)
+    blob2 = blob_process(thr2, detector, custom)
+    blob3 = blob_process(thr3, detector, custom)
     blobs = blob1, blob2, blob3
     if debug:
         cv2.imshow("equalized", img)
@@ -111,10 +129,10 @@ def analyze_ROI(image, debug=False):
     return white_triangles, iris_and_reflex, eye_borders, eye_borders_v2, blobs
 
 
-def analyze_eyes(ROIs, debug=False):
+def analyze_eyes(ROIs, debug=False, custom: dict = None):
     ROI_right, ROI_left, ROI_coords_right, ROI_coords_left = ROIs
-    landmarks_right = analyze_ROI(ROI_right, debug)
-    landmarks_left = analyze_ROI(ROI_left, debug)
+    landmarks_right = analyze_ROI(ROI_right, debug, custom)
+    landmarks_left = analyze_ROI(ROI_left, debug, custom)
     if debug:
         print(landmarks_right, landmarks_left, ROI_coords_right, ROI_coords_left)
     return landmarks_right, landmarks_left, ROI_coords_right, ROI_coords_left
