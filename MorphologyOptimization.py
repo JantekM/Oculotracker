@@ -21,15 +21,15 @@ def eval_param(param, val):
     custom = Morphology.defaultOptions()
     custom[param] = val
     model, x_train, x_test, y_train, y_test = prepare_custom_model(custom)
-    return check_model(model, x_train, y_train, x_test, y_test, times = 10)
+    return check_model(model, x_train, y_train, x_test, y_test, times=10)
 
 
 def prepare_custom_model(custom: dict = None):
     if custom is None:
         custom = Morphology.defaultOptions()
 
-    PrepareDataset.prepare_dataset(filename="custom", debug = False, custom=custom)
-    x,y = PrepareDataset.load_dataset('custom.npz')
+    PrepareDataset.prepare_dataset(filename="custom", debug=False, custom=custom)
+    x, y = PrepareDataset.load_dataset('custom.npz')
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20, random_state=42)
 
     normalizer = tf.keras.layers.Normalization(axis=-1)
@@ -38,14 +38,14 @@ def prepare_custom_model(custom: dict = None):
     model = tf.keras.Sequential([
         normalizer,
         layers.Dense(units=256, input_shape=(x_train.shape[1],), activation='relu'),
-        #layers.Dropout(rate = 0.05),
-        #layers.Dense(units=2048, activation='relu'),
-        #layers.Dense(units=128, activation='relu'), ##
-        #layers.Dense(units=128, activation='relu'),
+        # layers.Dropout(rate = 0.05),
+        # layers.Dense(units=2048, activation='relu'),
+        # layers.Dense(units=128, activation='relu'), ##
+        # layers.Dense(units=128, activation='relu'),
         layers.Dense(units=128, activation='relu'),
-        #layers.Dropout(rate = 0.05),
+        # layers.Dropout(rate = 0.05),
         layers.Dense(units=128, activation='relu'),
-        #layers.Dropout(rate = 0.05),
+        # layers.Dropout(rate = 0.05),
         layers.Dense(units=32, activation='relu'),
         layers.Dense(units=2)
     ])
@@ -56,13 +56,15 @@ def prepare_custom_model(custom: dict = None):
 
     return model, x_train, x_test, y_train, y_test
 
+
 def fit_model(model, epochs: int, x_train, y_train):
-    hist= model.fit(
-    x_train,
-    y_train,
-    epochs=epochs,
-    validation_split = 0.1)
+    hist = model.fit(
+        x_train,
+        y_train,
+        epochs=epochs,
+        validation_split=0.1)
     return hist, model
+
 
 def acc_of_model(model, x_test, y_test):
     predictions = model.predict(x_test)
@@ -70,8 +72,9 @@ def acc_of_model(model, x_test, y_test):
     err = np.sqrt(diff[:, 0] ** 2 + diff[:, 1] ** 2)
     return np.median(err)
 
+
 def check_model(model, x_train, y_train, x_test, y_test, times: int):
-    results = np.empty(shape = (times,))
+    results = np.empty(shape=(times,))
     _, model = fit_model(model, 10, x_train, y_train)
     _, model = fit_model(model, 300, x_train, y_train)
 
@@ -84,12 +87,24 @@ def check_model(model, x_train, y_train, x_test, y_test, times: int):
 if __name__ == "__main__":
     errs = []
     sds = []
-    params = ['minArea', 'maxArea', 'minInertia', 'maxInertia', 'threshold1', 'threshold2', 'threshold3', 'threshold4', 'tophatSize', 'blobErode', 'blobDilate', 'blobBlur']
-    vals = [9, 9000, 0.14, 0.95, 23, 31, 61, 74, 9, 1, 3, 4]
+    params = ['minArea',
+              'maxArea',
+              'minInertia',
+              'maxInertia',
+              'threshold1',
+              'threshold2',
+              'threshold3',
+              'threshold4',
+              'tophatSize',
+              'blobErode',
+              'blobDilate',
+              'blobBlur']
+    vals = [10-1, 10000-1000, 0.15-0.01, 1-0.05, 24-1, 32-1, 62-1, 75-1, 10-1, 2-1, 4-1, 5-1]
     for param, val in zip(params, vals):
         err, sd = eval_param(param, val)
         errs.append(83 - err)
         sds.append(sd)
+        np.savez("errs and sds", errs, sds)
         winsound.Beep(400, 400)
     print(errs)
     print(sds)
