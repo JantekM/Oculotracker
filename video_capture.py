@@ -47,7 +47,7 @@ def get_frame_cv():
     global capture
     working, frame = capture.read()
     if not working:
-        raise BaseException('error reading from camera input')
+        raise Exception('error reading from camera input')
     return frame
 
 def get_frame_tk(canvas_height: int, canvas_width: int):
