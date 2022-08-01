@@ -77,7 +77,7 @@ print(model.predict(x_train[:10]))
 
 #%%
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(0.01),
+    optimizer=tf.keras.optimizers.Adam(0.007),
     loss='mean_squared_error')
 
 #%%time
@@ -119,6 +119,7 @@ err = np.sqrt(diff[:,0]**2 + diff[:,1]**2)
 print(f'Median error = {np.median(err)} pixels, which is {np.median(err)/1400*100}% error')
 print(f'Mean error = {np.mean(err)} pixels, which is {np.mean(err)/1400*100}% error')
 
+model.save('Models/main')
 winsound.Beep(500, 700)
 
 pass
