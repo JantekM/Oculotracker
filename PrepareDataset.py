@@ -19,13 +19,42 @@ def load_dataset(file: str = 'newest'):
             break
     else:
         filename = file
-    npz = np.load(getcwd() + '\\Training Data\\Datasets\\' + filename)
+    path = getcwd() + '\\Training Data\\Datasets\\' + filename
+    print(f'Loading dataset from {path}.')
+    npz = np.load(path)
     x, y = npz['arr_0'], npz['arr_1']
+    print(f'Loaded {x.shape[0]} training pictures in total')
     return x, y
 
 
+def prepare_single_frame(photo, custom: dict = None):
+    if custom is None:
+        custom = Morphology.defaultOptions()
+    do_continue = False
+    try:
+        res_autoneuro = AutoNeuro.face_landmarks_from_frame(photo)
+        landmarks, ROIs = res_autoneuro["landmarks"], res_autoneuro["ROIs"]
+        res_morpho = Morphology.analyze_eyes(ROIs, False, custom)
+        # print("all good")
+    except AssertionError:
+        print(f"assertion error occured when analyzing frame {photo}, skipping")
+        do_continue = True
+    except Exception:
+        print(f"other error occured when analyzing frame{photo}, skipping")
+        do_continue = True
+
+    if do_continue:
+        return None
+    flat = flatten_landmarks(landmarks, res_morpho)
+    assert flat.shape == (1544,)
+    return flat
+
+
 def prepare_dataset(filename: str = None, must_include: str = None, exclude: str = None,
-                    person: str = 'Jantek Mikulski', debug = False, custom: dict = None):
+                    person: str = 'Jantek Mikulski', debug = False, custom: dict = None, print_errors = False):
+    num_good = 0
+    num_errs = 0
+    print(f'Preparing the dataset ...')
     if filename is None:
         t = datetime.now()
         filename = t.strftime('%Y.%m.%d.%H.%M.%S')
@@ -46,29 +75,36 @@ def prepare_dataset(filename: str = None, must_include: str = None, exclude: str
                     exclude, metadata['info']):
                 continue
         res_autoneuro = (AutoNeuro.face_landmarks_from_photo_batch([photo], with_ROI=True)[0])
-        landmarks, ROIs, cursor = res_autoneuro["landmarks"], res_autoneuro["ROIs"], res_autoneuro["cursor"]
+        landmarks, ROIs, cursor, blink = res_autoneuro["landmarks"], res_autoneuro["ROIs"], res_autoneuro["cursor"], res_autoneuro["blink"]
         do_continue = False
         try:
             res_morpho = Morphology.analyze_eyes(ROIs, debug, custom)
             #print("all good")
         except AssertionError:
-            print(f"assertion error occured when analyzing frame {photo}, skipping")
+            if print_errors:
+                print(f"assertion error occured when analyzing frame {photo}, skipping")
             do_continue = True
+            num_errs += 1
         except Exception:
-            print(f"other error occured when analyzing frame{photo}, skipping")
+            if print_errors:
+                print(f"other error occured when analyzing frame{photo}, skipping")
             do_continue = True
+            num_errs += 1
 
         if do_continue:
             continue
+        num_good += 1
         flat = flatten_landmarks(landmarks, res_morpho)
         assert flat.shape == (1544,)
 
         dataset_x.append(flat)
-        dataset_y.append(cursor)
+        cursor_and_blink = (*cursor, *blink)
+        dataset_y.append(cursor_and_blink)
     dataset_x_arr = np.array(dataset_x)
     dataset_y_arr = np.array(dataset_y)
     np.savez(full_path, dataset_x_arr, dataset_y_arr)
     print(f"Finished preparing the dataset. Saved under {full_path}.")
+    print(f"Got {num_errs} errors of total {num_errs+num_good} ({num_errs/(num_errs+num_good)*100:.2f}%).")
 
 
 def flatten_landmarks(landmarks, res_morpho) -> np.ndarray:
@@ -119,6 +155,6 @@ def scope_files(person: str):
 
 
 if __name__ == "__main__":
-    prepare_dataset()
-    #load_dataset('test pose.npz.npz')
+    #prepare_dataset(must_include='3gen|gen3')
+    x,y = load_dataset('newest')
     pass

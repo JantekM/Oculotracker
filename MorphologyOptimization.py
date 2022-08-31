@@ -99,7 +99,7 @@ if __name__ == "__main__":
               'blobErode',
               'blobDilate',
               'blobBlur']
-    vals = [10-1, 10000-1000, 0.15-0.01, 1-0.05, 24-1, 32-1, 62-1, 75-1, 10-1, 2-1, 4-1, 5-1]
+    vals = [10-1, 10000-1000, 0.15-0.01, 1-0.05, 24-1, 32-1, 62-1, 75-1, 10-1, 2-1, 4-1, 5-2]
     for param, val in zip(params, vals):
         err, sd = eval_param(param, val)
         errs.append(83 - err)

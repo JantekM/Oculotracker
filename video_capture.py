@@ -10,7 +10,7 @@ WIDTH = 1920
 FPS = 30
 
 capture = None
-wait_period: int = 1000
+wait_period: int = int(1000/FPS)
 #frame = None
 
 

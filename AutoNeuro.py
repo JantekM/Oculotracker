@@ -56,8 +56,47 @@ def face_landmarks_from_photo_batch(image_files: list, min_detection_confidence=
 
             metadata = load_exif(file)
 
-            output.append({"landmarks": landmarks, "ROIs": ROIs, "cursor": (metadata["x"], metadata['y'])})
+            output.append({"landmarks": landmarks,
+                           "ROIs": ROIs,
+                           "cursor": (metadata["x"], metadata['y']),
+                           "blink": (metadata["blinkLeft"], metadata['blinkRight'])})
         return output
+
+
+def face_landmarks_from_frame(image, min_detection_confidence=0.5):
+    mp_face_mesh = mp.solutions.face_mesh
+
+    with mp_face_mesh.FaceMesh(
+            static_image_mode=True,
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=min_detection_confidence) as face_mesh:
+
+            results = face_mesh.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
+    if not results.multi_face_landmarks:
+        raise Exception(f'Błąd, nie wykryto twarzy na obrazie z kamery!')  # TODO: porządny logging
+
+    landmarks = results.multi_face_landmarks[0].landmark
+
+    coords = get_facemesh_coords(landmarks, image)
+    coords = coords[:, [0, 1]]  # odrzucenie współrzędnej Z
+    coords_eyes = (coords[eye_landmarks_right, :], coords[eye_landmarks_left, :])
+    ROI_coords_right = np.min(coords_eyes[0][:, 0]), \
+                       np.max(coords_eyes[0][:, 0]), \
+                       np.min(coords_eyes[0][:, 1]), \
+                       np.max(coords_eyes[0][:, 1])
+
+    ROI_coords_left = np.min(coords_eyes[1][:, 0]), \
+                      np.max(coords_eyes[1][:, 0]), \
+                      np.min(coords_eyes[1][:, 1]), \
+                      np.max(coords_eyes[1][:, 1])
+    ROI_right = image[ROI_coords_right[2]:ROI_coords_right[3], ROI_coords_right[0]:ROI_coords_right[1]]
+    ROI_left = image[ROI_coords_left[2]:ROI_coords_left[3], ROI_coords_left[0]:ROI_coords_left[1]]
+    ROIs = (ROI_right, ROI_left, ROI_coords_right, ROI_coords_left)
+
+    output= {"landmarks": landmarks, "ROIs": ROIs}
+    return output
 
 
 def get_facemesh_coords(landmark_list, img):

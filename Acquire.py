@@ -30,6 +30,8 @@ class AcquisitionGui:
         self.path = tkinter.StringVar(value=os.getcwd() + '\\Training Data')
         self.recordingMode = False
         self.spacePressed = False
+        self.blinkMode = False
+        self.isRight = False
 
         # build ui
         self.Window = tkinter.ttk.Panedwindow(master, orient='vertical')
@@ -42,20 +44,23 @@ class AcquisitionGui:
         self.CameraIDLabel = tkinter.ttk.Label(self.CameraSettingsFrame)
         self.CameraIDLabel.configure(text='Camera')
         self.CameraIDLabel.grid(column='0', row='0')
-        self.CameraSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame)
+        self.CameraSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame, values=['0 (Rear)', '1 (Front)', '2 (Pluggable)'])
         self.CameraSelection.grid(column='1', row='0')
+        self.CameraSelection.current(1)
 
         self.ResolutionLabel = tkinter.ttk.Label(self.CameraSettingsFrame)
         self.ResolutionLabel.configure(text='Resolution')
         self.ResolutionLabel.grid(column='0', row='1')
-        self.ResolutionSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame)
+        self.ResolutionSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame, values=['1080 x 1920'])
         self.ResolutionSelection.grid(column='1', row='1')
+        self.ResolutionSelection.current(0)
 
         self.FPSLabel = tkinter.ttk.Label(self.CameraSettingsFrame)
         self.FPSLabel.configure(text='FPS')
         self.FPSLabel.grid(column='0', row='2')
-        self.FPSSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame)
+        self.FPSSelection = tkinter.ttk.Combobox(self.CameraSettingsFrame, values=['25', '30'])
         self.FPSSelection.grid(column='1', row='2')
+        self.FPSSelection.current(1)
 
         self.ShowPreviewCheckbox = tkinter.ttk.Checkbutton(self.CameraSettingsFrame)
         self.ShowPreviewCheckbox.configure(text='Show preview')
@@ -119,12 +124,12 @@ class AcquisitionGui:
 
         self.KeyBindingsFrame = tkinter.ttk.Labelframe(self.OptionsFrame)
         self.KeyBindingsLabel = tkinter.ttk.Label(self.KeyBindingsFrame)
-        self.KeyBindingsLabel.configure(text='''Show keybindings: H
+        self.KeyBindingsLabel.configure(text='''
         Exit Fullscreen mode: Esc
+        Exit program: Esc Esc
         Record: Space
-        Launch Constant Pose Mode: Ctrl + P
-        Launch Cursor Mode: Ctrl + M
-        Record out of border: Ctrl + B 
+        Launch Pose Mode: Ctrl + P
+        Launch Blink Mode: Ctrl + M
         ''')
         self.KeyBindingsLabel.pack(side='top')
         self.KeyBindingsFrame.configure(height='200', text='Key bindings:', width='200')
@@ -143,14 +148,19 @@ class AcquisitionGui:
         self.LaunchFrame = tkinter.ttk.Labelframe(self.RightFrame)
 
         self.ConstPoseButton = tkinter.ttk.Button(self.LaunchFrame)
-        self.ConstPoseButton.configure(text='Constant Pose Mode')
+        self.ConstPoseButton.configure(text='Pose Mode')
         self.ConstPoseButton.pack(expand='true', side='left')
         self.ConstPoseButton.configure(command=self.ConstPoseCallback)
 
-        self.ConstantCursorButton = tkinter.ttk.Button(self.LaunchFrame)
-        self.ConstantCursorButton.configure(text='Constant Cursor Mode')
-        self.ConstantCursorButton.pack(expand='true', side='right')
-        self.ConstantCursorButton.configure(command=self.CursorModeCallback)
+        self.BlinkLeftButton = tkinter.ttk.Button(self.LaunchFrame)
+        self.BlinkLeftButton.configure(text='Blink with right eye')
+        self.BlinkLeftButton.pack(expand='true', side='right')
+        self.BlinkLeftButton.configure(command= lambda: self.BlinkModeCallback(isRight=False))
+
+        self.BlinkRightButton = tkinter.ttk.Button(self.LaunchFrame)
+        self.BlinkRightButton.configure(text='Blink with left eye')
+        self.BlinkRightButton.pack(expand='true', side='right')
+        self.BlinkRightButton.configure(command= lambda: self.BlinkModeCallback(isRight=True))
 
         self.LaunchFrame.configure(height='50', text='Launch', width='200')
         self.LaunchFrame.pack(expand='true', fill='both', ipadx='5', ipady='5', padx='5', pady='5', side='bottom')
@@ -166,14 +176,7 @@ class AcquisitionGui:
         self.StatusBarOutputText = tkinter.Text(self.StatusBarFrame)
         self.StatusBarOutputText.configure(autoseparators='false', height='3', insertunfocussed='none', setgrid='false')
         self.StatusBarOutputText.configure(state='disabled', tabstyle='tabular', undo='false', width='50')
-        _text_ = '''1Status messages ...
-2Status messages ...
-3Status messages ...
-4Status messages ...
-5Status messages ...
-6Status messages ...
-7Status messages ...
-8end'''
+        _text_ = '''Status messages here...'''
         self.StatusBarOutputText.configure(state='normal')
         self.StatusBarOutputText.insert('0.0', _text_)
         self.StatusBarOutputText.configure(state='disabled')
@@ -193,10 +196,13 @@ class AcquisitionGui:
                                                       title="Choose directory for storing data"))
 
     def ConstPoseCallback(self, event=None):
-        recording_mode(mode='pose')
+        AcquisitionGui.gui.blinkMode = False
+        recording_mode()
 
-    def CursorModeCallback(self, event=None):
-        pass
+    def BlinkModeCallback(self, isRight):
+        AcquisitionGui.gui.isRight = isRight
+        AcquisitionGui.gui.blinkMode = True
+        recording_mode()
 
     def ShowPreviewCallback(self, event=None):
         pass
@@ -237,7 +243,7 @@ def gui_mode():
 
 def key_handler(event):
     # Replace the window's title with event.type: input key
-    root.title("{}: {}".format(str(event.type), event.keysym))
+    #root.title("{}: {}".format(str(event.type), event.keysym))
     ctrl_pressed = (event.state & 0x4) != 0
     if event.keysym == 'Escape':
         if AcquisitionGui.gui.recordingMode:
@@ -248,10 +254,12 @@ def key_handler(event):
             root.destroy()
     elif event.keysym == 'p':
         if ctrl_pressed:
-            print("ctrl p")
+            AcquisitionGui.gui.blinkMode = False
+            recording_mode()
     elif event.keysym == 'm':
         if ctrl_pressed:
-            print("ctrl m")
+            AcquisitionGui.gui.blinkMode = True
+            recording_mode()
     elif event.keysym == 'b':
         if ctrl_pressed:
             print("ctrl b")
@@ -298,6 +306,8 @@ def save_frame():
     global root
     gui = AcquisitionGui.gui
     frame = video_capture.get_frame_cv()
+    x = root.winfo_pointerx() - root.winfo_rootx()
+    y = root.winfo_pointery() - root.winfo_rooty()
     t = datetime.now()
     filename = t.strftime('%H.%M.%S.%f') + '.jpg'
     full_path = gui.path.get() + '\\' + gui.PersonEntry.get() + '\\' + t.strftime("%Y.%m.%d")
@@ -307,8 +317,13 @@ def save_frame():
     #print(full_path)
     cv.imwrite(fname, frame)
 
-    x = root.winfo_pointerx() - root.winfo_rootx()
-    y = root.winfo_pointery() - root.winfo_rooty()
+    blinkL, blinkR = 0,0
+    if gui.blinkMode:
+        if gui.isRight:
+            blinkR = 1
+        else:
+            blinkL = 1
+
     metadata = {
         "timestamp": t.timestamp(),
         "x": x,
@@ -318,7 +333,9 @@ def save_frame():
         "place": gui.PlaceEntry.get(),
         "lightConditions": gui.LightEntry.get(),
         "info": gui.AdditionalInfoEntry.get(),
-        "camera": video_capture.CAMERA_ID
+        "camera": video_capture.CAMERA_ID,
+        "blinkLeft": blinkL,
+        "blinkRight": blinkR
     }
 
     save_exif(fname, metadata)
